@@ -4,6 +4,7 @@ Rekognition Android SDK version 2.0
 
 Sample:
 
+
     List<FaceDetectJobs> faceDetectJobs = new ArrayList<FaceDetectJobs>();
     faceDetectJobs.add(FaceDetectJobs.Age);
     faceDetectJobs.add(FaceDetectJobs.Aggressive);

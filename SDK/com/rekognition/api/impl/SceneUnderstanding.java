@@ -22,7 +22,7 @@ public class SceneUnderstanding extends AbstractRekognitionAPI {
 
     public SceneUnderstandingAdapter getResposne (String url) throws RekognitionAPIException {
         List<HttpParameter> params = new ArrayList<HttpParameter>();
-        if (url.isEmpty()) {
+        if (url==null || url.isEmpty()) {
             throw new RekognitionAPIException("You have to provide an url for scene understanding");
         }
         params.add(new HttpParameter("jobs", "scene"));

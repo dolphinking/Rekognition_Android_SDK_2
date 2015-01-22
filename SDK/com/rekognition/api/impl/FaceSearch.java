@@ -124,7 +124,7 @@ public class FaceSearch extends AbstractRekognitionAPI {
             sb.append("_nodetect");
         }
         params.add(new HttpParameter("jobs", sb.toString()));
-        if (!url.isEmpty()) {
+        if (url!=null && !url.isEmpty()) {
             params.add(new HttpParameter("urls", url));
         }
         if (base64_byte != null) {

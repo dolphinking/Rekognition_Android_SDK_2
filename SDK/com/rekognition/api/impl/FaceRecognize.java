@@ -87,7 +87,7 @@ public class FaceRecognize extends AbstractRekognitionAPI {
         } else {
             params.add(new HttpParameter("jobs", "face_recognize_nodetect"));
         }
-        if (!url.isEmpty()) {
+        if (url!=null && !url.isEmpty()) {
             params.add(new HttpParameter("urls", url));
         }
         if (base64_byte != null) {

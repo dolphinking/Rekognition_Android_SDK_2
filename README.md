@@ -19,20 +19,12 @@ Sample:
     List<Face> faces = resp.getFaces();
     
 Concept Sample:
-        Bitmap bitmap = getLocalBitmap();
-        ConceptDetect instance = new ConceptDetect(REKO_API_KEY, REKO_API_SECRET);
-        try {
-            ConceptAdapter result = instance.getResposne(bitmap, 3000);
-            List<Concept> concepts = result.getConcepts();
-            for (Concept concept:concepts) {
-                try {
-                    Log.i("Concept: ", String.format("%s: %3.2f", concept.getTag(), concept.getScore()));
-                } catch (FieldNotFoundException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (RekognitionAPIException e) {
-            e.printStackTrace();
-        }
+
+
+    Bitmap bitmap = getLocalBitmap();
+    ConceptDetect instance = new ConceptDetect(REKO_API_KEY, REKO_API_SECRET);
+    ConceptAdapter result = instance.getResposne(bitmap, 3000);
+    List<Concept> concepts = result.getConcepts();
+    for (Concept concept:concepts) {
+        Log.i("Concept: ", String.format("%s: %3.2f", concept.getTag(), concept.getScore()));
+    }

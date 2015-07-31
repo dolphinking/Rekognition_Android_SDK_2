@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -81,7 +82,7 @@ public class HttpManager {
                 sResponse = readStream(in);
             }
             finally {
-              urlConnection.disconnect();
+                urlConnection.disconnect();
             }
         }
         catch(MalformedURLException ex){
@@ -100,60 +101,54 @@ public class HttpManager {
         return get(url, null);
     }
 
+    final String sLineEnd = "\r\n";
+    final String sTwoHyphens = "--";
+    final String sBoundary =  "****";
+
+    private void configurePostReq(HttpURLConnection conn) throws ProtocolException {
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.setUseCaches(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Connection", "Keep-Alive");
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+sBoundary);
+    }
     public String post(String postUrl, Collection<HttpParameter> params) throws RekognitionAPIException {
         if (logger.isLoggable(Level.ALL)) {
             logger.log(Level.WARNING, "Got a POST request to " + postUrl);
         }
-        HttpURLConnection conn = null;
-        DataOutputStream dos = null;
-        DataInputStream inStream = null;
-        String lineEnd = "\r\n";
-        String twoHyphens = "--";        
-        String boundary =  "****";
-        String response_data = null;                             
         try{
-            //------------------ CLIENT REQUEST          
-            // open a URL connection to the Servlet
-            URL url = new URL(postUrl);
-            conn = getURLConnectionForURL(url);            
+            final URL url = new URL(postUrl);
+            final HttpURLConnection conn = getURLConnectionForURL(url);
             if (conn == null) {
                 throw new RekognitionAPIException("URL is not http or https");
             }
-            // Allow Inputs
-            conn.setDoInput(true);
-            // Allow Outputs
-            conn.setDoOutput(true);
-            // Don't use a cached copy.
-            conn.setUseCaches(false);
-            // Use a post method.
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Connection", "Keep-Alive");
-            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+boundary);
-            dos = new DataOutputStream( conn.getOutputStream() );
+            configurePostReq(conn);
+            DataOutputStream dos = new DataOutputStream( conn.getOutputStream() );
             for (HttpParameter param:params) {
                 String value = param.getValue();
-                dos.writeBytes(twoHyphens + boundary  + lineEnd);                
+                dos.writeBytes(sTwoHyphens + sBoundary  + sLineEnd);
                 if (value != null) {
-                    dos.writeBytes("Content-Disposition: form-data; name=\"" + param.getName() + "\"");
-                    dos.writeBytes(lineEnd);
-                    dos.writeBytes(lineEnd);
+                    dos.writeBytes("Content-Disposition: form-data; name=\"" + param.getName() + "\"" + sLineEnd);
+                    dos.writeBytes(sLineEnd);
                     dos.writeBytes(value);                    
                 }
                 else if (param.getBitmap() != null){                    
-                    dos.writeBytes("Content-Disposition: form-data; name=\"" + param.getName() + "\"; filename=\"file1.jpg\"" + lineEnd);                    
-                    dos.writeBytes("Content-Type: image/jpeg" + lineEnd);                    
-                    dos.writeBytes(lineEnd);
+                    dos.writeBytes("Content-Disposition: form-data; name=\"" + param.getName() + "\"; filename=\"file1.jpg\"" + sLineEnd);
+                    dos.writeBytes("Content-Type: image/jpeg" + sLineEnd);
+                    dos.writeBytes(sLineEnd);
                     Bitmap bmp = param.getBitmap();
                     bmp.compress(Bitmap.CompressFormat.JPEG, 100, dos); 
                 }
                 else {
                     Log.d(getClass().getSimpleName(), "Http parameter " + param.getName() + " field has no value and no bitmap");
                 }
-                dos.writeBytes(lineEnd);
+                dos.writeBytes(sLineEnd);
             }
-            dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+            dos.writeBytes(sTwoHyphens + sBoundary + sTwoHyphens + sLineEnd);
             dos.flush();
             dos.close();
+            return getResponseData(conn);
         }
         catch (MalformedURLException ex){
             Log.d(getClass().getSimpleName(), "error: " + ex.getMessage(), ex);
@@ -163,14 +158,16 @@ public class HttpManager {
             Log.d(getClass().getSimpleName(), "error: " + ioe.getMessage(), ioe);
             throw new RekognitionAPIException(ioe);
         }
-        //------------------ read the SERVER RESPONSE
-        try {            
-            inStream = new DataInputStream ( conn.getInputStream() );
+    }
+
+    private String getResponseData(HttpURLConnection conn) throws RekognitionAPIException {
+        try {
+            DataInputStream inStream = new DataInputStream ( conn.getInputStream() );
             int responseCode = conn.getResponseCode();
             if (responseCode != OK_RESPONSE_STATUS_CODE) {
                 throw new RekognitionAPIException("Un-acceptable response code from server", responseCode);
             }
-            response_data = readStream(inStream);
+            return readStream(inStream);
         }
         catch (IOException ioex){
             Log.e("Debug", "error: " + ioex.getMessage(), ioex);
@@ -179,7 +176,6 @@ public class HttpManager {
         finally {
             conn.disconnect();
         }
-       return response_data;
     }
 
     private String encodeParameters(Collection<HttpParameter> params) throws RekognitionAPIException {

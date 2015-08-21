@@ -1,0 +1,8 @@
+This software is licensed as a "Service" under the ReKognition Terms of Service (the "License"), which is available at  https://rekognition.com/more/terms.  See the License for the specific language governing permissions and limitations under the License.
+
+
+
+These materials may include third party software that is copyrighted by other parties and is subject to separate license terms.  
+
+
+These materials are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, either express or implied.
